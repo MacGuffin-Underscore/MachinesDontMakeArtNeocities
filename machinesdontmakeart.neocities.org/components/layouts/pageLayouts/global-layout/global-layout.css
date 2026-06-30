@@ -1,0 +1,3 @@
+/*This is the global template that EVERY page MUST follow except in very rare cases*/
+@import url(./css/global-layout.structure.css);
+@import url(./css/global-layout.style.css);

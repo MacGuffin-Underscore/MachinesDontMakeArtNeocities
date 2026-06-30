@@ -1,26 +1,39 @@
 // initLayout() is called once the DOM (the HTML content of your website) has been loaded.
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+    var insertAtElement = document.body;
+
     // The following is layout agnostic and loaded into all pages unless opted out
-    if (!document.head.classList.contains("opt-out-head-injection"))
-        document.head.insertAdjacentHTML("beforeend", pageHead)
+    if (!document.head.classList.contains("opt-out-head-injection")) {
+        document.head.insertAdjacentHTML("beforeend", globalHead);
+    }
+
+    if (!document.head.classList.contains("opt-out-global-template")) {
+        insertAtElement = await injectLayout("global-layout", insertAtElement, "global-container");
+    }
 
     // Load main-layout
     if (document.head.classList.contains("main-layout")) {
-        // Inject references
-        document.head.insertAdjacentHTML("beforeend", mainLayoutCss)
-
-        // Inserting header and footer:
-        document.body.classList.add("main-layout-body") //enforce body layout
-        document.body.insertAdjacentHTML("afterbegin", mainLayoutSidebar); // insert sidebar before, because we want header above it... its weird
-        document.body.insertAdjacentHTML("afterbegin", mainLayoutHeader);
-        document.body.insertAdjacentHTML("beforeend", mainLayoutFooter);
-
-        initActiveLinks();
+        insertAtElement = await injectLayout("main-layout", insertAtElement, "content-container")
     }
+
+    // Inject styles for content (if any)
+    if (contentElement != undefined) {
+        const contentClassList = contentElement.classList;
+
+        for (let i = 0; i < contentClassList.length; i++) {
+            document.head.insertAdjacentHTML("beforeend", getContentStyle(contentClassList[i]));
+        }
+
+        insertAtElement.appendChild(contentElement);
+    }
+
+    // do this thing, idk
+    initActiveLinks();
 });
 
 //#region Properties
 
+const contentElement = document.getElementById("content");
 const pageHref = window.location.href;
 const nesting = getNestingString(); // ${nesting} outputs the files depth to get you back to ./machinesdontmakeart.neocities.org/
 const pageName = getPageName(); // ${pageName} outputs the folder name for the page, used to collect page css and js
@@ -70,42 +83,77 @@ function getPageName() {
     return pageArray[pageArray.length - 1].replace(".html", "");
 }
 
+function getPageLayoutCss(pageLayout) {
+    return `
+    <!--layout => ${pageLayout}-->
+    <link href="${nesting}/components/layouts/pageLayouts/${pageLayout}/${pageLayout}.css" rel="stylesheet" type="text/css" media="all" />
+    `;
+}
+
+// injects a layout from ./{page-layout}/{page-layout}.html into the body at the parent element, then sets a new parent element for further nesting
+async function injectLayout(pageLayout, parentElement, newParentID) {
+    if (parentElement === undefined || parentElement === null) {
+        document.body.insertAdjacentHTML("beforeend",
+            `<p>Unable to insert template '${pageLayout}' into element ID '${parentElement}'</p>`); return;
+    }
+    var newParentElement;
+
+    // Inject head references
+    document.head.insertAdjacentHTML("beforeend", getPageLayoutCss(pageLayout))
+
+    await fetch(`${nesting}/components/layouts/pageLayouts/${pageLayout}/${pageLayout}.html`)
+        .then(response => {
+            // When the page is loaded convert it to text
+            return response.text()
+        })
+        .then(html => {
+            // Initialize the DOM parser
+            const parser = new DOMParser()
+
+            // Parse the text
+            const doc = parser.parseFromString(html, "text/html")
+
+            // You can now even select part of that html as you would in the regular DOM
+            // Example:
+            // const docArticle = doc.querySelector('article').innerHTML
+            console.log(doc);
+
+            const layoutElements = doc.querySelectorAll('body > *')
+            const layoutElementLength = layoutElements.length;
+
+            for (let i = 0; i < layoutElementLength; i++) {
+                parentElement.insertAdjacentElement("afterBegin", layoutElements[i])
+            }
+
+            const newParentCheck = document.getElementById(newParentID);
+
+            if (newParentCheck != null && newParentID != "") {
+                newParentElement = newParentCheck;
+            }
+        })
+        .catch(error => {
+            console.error('Failed to fetch page: ', error)
+        }, Promise.resolve());
+
+    return newParentElement;
+}
+
+
+function getContentStyle(contentStyle) {
+    return `
+    <!--content-style-->
+    <link href="${nesting}/components/contentStyles/${contentStyle}/${contentStyle}.css" rel="stylesheet" type="text/css" media="all" />
+    `;
+}
+
+
+
 //#endregion Functions
 
 //#region Layouts
 
-// Insert your header HTML inside these ``. You can use HTML as usual.
-const mainLayoutHeader = `
-	<div class="main-layout-header">
-		Header. Example of how to use the 'active' class to style active links (here: bold):
-		<nav>
-			<a href="/coding/layout-base-code">homepage</a>
-			<a href="/coding/base-code-example/">this page</a>
-			<a href="/coding/layout-base-code">other page</a>
-			<a href="/coding/layout-base-code">other page</a>
-		</nav>
-	</div>
-`;
-
-// Insert your footer HTML inside these ``. You can use HTML as usual.
-// Remove all the content inside the `` if you don't have a footer.
-const mainLayoutFooter = `
-	<div class="main-layout-footer">
-		Footer. Example of how to add an image: 
-		<img src="${nesting}/assets/img/layout/divider1.gif" alt="" aria-hidden="true"/>
-	</div>
-`;
-
-// Insert your sidebar HTML inside these ``. You can use HTML as usual.
-// Remove all the content inside the `` if you don't have a sidebar.
-const mainLayoutSidebar = `
-	<div class="main-layout-sidebar">
-    
-    </div>
-`;
-
-const pageHead = `
-    <!--injected head-->
+// boilerplate head information that goes into (almost) any page
+const globalHead = `
     <!--boilerplate-->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -114,21 +162,22 @@ const pageHead = `
     <meta property="og:url" content="${pageHref}" />
     
     <!--icon-->
+    <link rel="icon" type="image/x-icon" href="${nesting}/assets/img/logo/symbol.svg">
 
     <!--global css-->
-    <link href="${nesting}/assets/fonts/fonts.css" rel="stylesheet" type="text/css" media="all" />
+    <link href="${nesting}/components/globalCss/global.css" rel="stylesheet" type="text/css" media="all" />
 
     <!--page css-->
     <link href="${nesting}/components/pages/${pageName}/${pageName}.structure.css" rel="stylesheet" type="text/css" media="all" />
     <link href="${nesting}/components/pages/${pageName}/${pageName}.style.css" rel="stylesheet" type="text/css" media="all" />
 
+    <!--global scripts-->
+
     <!--page scripts-->
     <script type="module" src="${nesting}/components/pageComponents/${pageName}/${pageName}.js"></script>
-`;
 
-const mainLayoutCss = `
-    <!--injected main-layout css-->
-    <link href="${nesting}/components/layouts/main-layout/main-layout.css" rel="stylesheet" type="text/css" media="all" />
+    <!--global template-->
+    <link href="${nesting}/components/layouts/pageLayouts/global-layout/global-layout.css" rel="stylesheet" type="text/css" media="all" />
 `;
 
 //#endregion Layouts

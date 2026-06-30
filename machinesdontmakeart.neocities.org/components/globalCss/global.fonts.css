@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'rajdhani_bold';
+    src: url("../../assets/fonts/otf/Rajdhani-Bold.otf");
+}
+
+@font-face {
+    font-family: 'rajdhani_semibold';
+    src: url("../../assets/fonts/otf/Rajdhani-SemiBold.otf");
+}
