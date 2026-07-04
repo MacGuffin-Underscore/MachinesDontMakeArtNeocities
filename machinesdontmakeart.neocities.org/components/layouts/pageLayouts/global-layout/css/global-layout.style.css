@@ -1,3 +1,5 @@
-.main-layout-sidebar {
-    color: purple;
+body {
+    background-image: url(./../../../../../assets/img/logo/pattern.svg);
+    background-size: 100px 100px;
+    background-position-x: 50vw;
 }

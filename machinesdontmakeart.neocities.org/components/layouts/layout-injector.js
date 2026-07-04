@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     if (!document.head.classList.contains("opt-out-global-template")) {
-        insertAtElement = await injectLayout("global-layout", insertAtElement, "global-container");
+        insertAtElement = await injectLayout("global-layout", insertAtElement, "global-content");
     }
 
     // Load main-layout
@@ -83,7 +83,8 @@ function getPageName() {
     return pageArray[pageArray.length - 1].replace(".html", "");
 }
 
-function getPageLayoutCss(pageLayout) {
+// gets the head to add to the page for any layouts used
+function getLayoutHeadCss(pageLayout) {
     return `
     <!--layout => ${pageLayout}-->
     <link href="${nesting}/components/layouts/pageLayouts/${pageLayout}/${pageLayout}.css" rel="stylesheet" type="text/css" media="all" />
@@ -96,22 +97,26 @@ async function injectLayout(pageLayout, parentElement, newParentID) {
         document.body.insertAdjacentHTML("beforeend",
             `<p>Unable to insert template '${pageLayout}' into element ID '${parentElement}'</p>`); return;
     }
+
     var newParentElement;
 
     // Inject head references
-    document.head.insertAdjacentHTML("beforeend", getPageLayoutCss(pageLayout))
+    document.head.insertAdjacentHTML("beforeend", getLayoutHeadCss(pageLayout))
 
     await fetch(`${nesting}/components/layouts/pageLayouts/${pageLayout}/${pageLayout}.html`)
         .then(response => {
             // When the page is loaded convert it to text
-            return response.text()
+            return response.text();
         })
         .then(html => {
             // Initialize the DOM parser
-            const parser = new DOMParser()
+            const parser = new DOMParser();
+
+            // Set any sources to their proper nested value
+            html = html.replace("{nesting}", nesting);
 
             // Parse the text
-            const doc = parser.parseFromString(html, "text/html")
+            const doc = parser.parseFromString(html, "text/html");
 
             // You can now even select part of that html as you would in the regular DOM
             // Example:
@@ -139,15 +144,6 @@ async function injectLayout(pageLayout, parentElement, newParentID) {
 }
 
 
-function getContentStyle(contentStyle) {
-    return `
-    <!--content-style-->
-    <link href="${nesting}/components/contentStyles/${contentStyle}/${contentStyle}.css" rel="stylesheet" type="text/css" media="all" />
-    `;
-}
-
-
-
 //#endregion Functions
 
 //#region Layouts
@@ -171,13 +167,9 @@ const globalHead = `
     <link href="${nesting}/components/pages/${pageName}/${pageName}.structure.css" rel="stylesheet" type="text/css" media="all" />
     <link href="${nesting}/components/pages/${pageName}/${pageName}.style.css" rel="stylesheet" type="text/css" media="all" />
 
-    <!--global scripts-->
-
     <!--page scripts-->
     <script type="module" src="${nesting}/components/pageComponents/${pageName}/${pageName}.js"></script>
 
-    <!--global template-->
-    <link href="${nesting}/components/layouts/pageLayouts/global-layout/global-layout.css" rel="stylesheet" type="text/css" media="all" />
 `;
 
 //#endregion Layouts

@@ -1,3 +1,20 @@
-.main-layout-sidebar {
-    color: purple;
+.global-container {
+    display: grid;
+    grid-template-rows: 1fr 10fr 2fr;
+    grid-template-columns: 1fr 6fr 1fr;
+    height: 100vh;
+    width: 100vw;
+}
+
+.global-container .global-content {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.global-container .background {
+    position: absolute;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    height: 100vh;
+    width: 100vw;
 }
