@@ -1,5 +1,9 @@
 body {
     background-image: url(./../../../../../assets/img/logo/pattern.svg);
     background-size: 100px 100px;
-    background-position-x: 50vw;
+    background-position-x: center;
+}
+
+.global-container .global-footer {
+    background-color: yellow;
 }

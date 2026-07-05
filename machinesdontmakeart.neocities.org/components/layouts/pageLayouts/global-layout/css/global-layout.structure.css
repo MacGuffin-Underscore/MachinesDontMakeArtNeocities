@@ -1,20 +1,97 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
 .global-container {
+    --global-content-width: 70vw;
+    --global-content-sides: 1fr;
+    --global-content-top: 6vh;
+    --global-content-bottom: 6vh;
+    /* display */
     display: grid;
-    grid-template-rows: 1fr 10fr 2fr;
-    grid-template-columns: 1fr 6fr 1fr;
+    grid-template-rows: var(--global-content-top) 1fr var(--global-content-bottom);
+    grid-template-columns: 1fr var(--global-content-width) 1fr;
     height: 100vh;
     width: 100vw;
+    overflow: scroll;
 }
 
 .global-container .global-content {
+    /* grid position */
     grid-column: 2;
     grid-row: 2;
 }
 
-.global-container .background {
+.logo-container {
+    --logo-size: calc(var(--global-content-width)*0.2);
+    --logo-height: calc(var(--logo-size) * 0.6);
+    --logo-position: 0.5rem;
+    /* position */
     position: absolute;
-    grid-column: 1 / -1;
-    grid-row: 1 / -1;
-    height: 100vh;
-    width: 100vw;
+    top: var(--global-content-top);
+    right: var(--logo-position);
+    /* sizing */
+    height: var(--logo-height);
+    width: var(--logo-size);
+    /* display */
+    display: flex;
+    justify-content: center;
+    /* margin */
+    margin: auto;
+    transition: 0.2s;
+}
+
+
+
+.logo-container:hover {
+    scale: 1.1;
+    rotate: 3deg;
+}
+
+.logo-container .logo-background {
+    display: block;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.logo-container .logo-symbol {
+    position: absolute;
+    top: calc(var(--logo-size) * 0.05);
+    left: calc(var(--logo-size) * 0.03);
+    width: calc(var(--logo-size) * 0.38);
+}
+
+.logo-container .logo-text {
+    position: absolute;
+    top: calc(var(--logo-size) * 0.08);
+    left: calc(var(--logo-size)*0.35);
+    width: calc(var(--logo-size) * 0.6);
+}
+
+
+@media (max-aspect-ratio: 1) {
+    .global-container {
+        --global-content-width: 100vw;
+        --global-content-sides: 0;
+        --global-content-top: 20vh
+    }
+
+    .logo-container {
+        --logo-size: 20vh;
+        position: relative;
+        grid-row: 1;
+        grid-column: 2;
+        top: 0;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    .global-container {
+        --global-content-width: 1344px;
+    }
+
+    .logo-container {
+        right: calc((100vw - var(--global-content-width))/2 - var(--logo-size) - 1rem)
+    }
 }
